@@ -4,7 +4,10 @@ Após instalação e leitura do readme.me seguir os passos
 
 abaixo para execução da aplicação e simulação.
 
-node bench-browser-mem-v2.js
+
+no bash execute:
+
+$node bench-browser-mem-v2.js
 O script executa testes com:
 
 1, 5, 10 e 20 abas
@@ -37,6 +40,8 @@ browserbench/
 ├── results-*.csv
 ├── package.json
 └── README.md
+
+
 ⚠️ Observações importantes
 Safari não é benchmarkável no Linux
 
