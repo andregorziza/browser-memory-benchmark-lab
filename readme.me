@@ -1,0 +1,46 @@
+# Browser Memory Benchmark Lab (Playwright)
+
+Este laboratório mede **uso real de memória RAM por aba** em navegadores modernos
+utilizando **Playwright**, **Node.js** e leitura direta de **RSS via /proc** no Linux.
+
+O foco é **benchmark técnico defensável**, no nível de **SRE / Performance Engineering**,
+evitando métricas superficiais de reviews comuns.
+
+---
+
+## 🎯 Objetivo
+
+- Medir **baseline real de memória** do navegador
+- Calcular **consumo incremental por aba**
+- Comparar **Chromium vs Firefox**
+- Gerar resultados **reprodutíveis**
+- Exportar dados para **CSV / JSON**
+
+---
+
+## 🧠 Metodologia
+
+- Navegadores iniciados via **Playwright `launchServer()`**
+- Captura do **PID raiz real**
+- Soma da **árvore completa de processos**
+- Métrica baseada em **RSS do sistema operacional**
+- Baseline (0 abas) descontado automaticamente
+
+> Isso reflete o que realmente aparece em `top`, `htop` e cgroups.
+
+---
+
+## 🛠️ Requisitos
+
+- Ubuntu 20.04+ (ou compatível)
+- Node.js 18+
+- npm
+
+---
+
+## 📦 Instalação
+
+```bash
+npm install playwright
+npx playwright install --with-deps
+

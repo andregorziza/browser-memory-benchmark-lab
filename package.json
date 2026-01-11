@@ -1,0 +1,15 @@
+{
+  "name": "browserbench",
+  "version": "1.0.0",
+  "description": "",
+  "main": "bench-playwright-mem.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "playwright": "^1.57.0"
+  }
+}
