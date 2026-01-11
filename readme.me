@@ -8,27 +8,27 @@ SRE / Performance Engineering standard — avoiding the shallow metrics often se
 
 🎯 Goals
 
-Measure the browser’s true memory baseline
+*Measure the browser’s true memory baseline
 
-Calculate incremental memory cost per tab
+*Calculate incremental memory cost per tab
 
-Compare Chromium-based browsers vs Firefox
+*Compare Chromium-based browsers vs Firefox
 
-Produce reproducible benchmarks
+*Produce reproducible benchmarks
 
-Export results to CSV and JSON
+*Export results to CSV and JSON
 
 🧠 How It Works
 
-Browsers are launched using Playwright launchServer()
+*Browsers are launched using Playwright launchServer()
 
-The real root PID is identified
+*The real root PID is identified
 
-Memory usage is calculated by summing the entire process tree
+*Memory usage is calculated by summing the entire process tree
 
-Metrics are based on OS-level RSS
+*Metrics are based on OS-level RSS
 
-The baseline (0 tabs) is automatically subtracted
+*The baseline (0 tabs) is automatically subtracted
 
 Results reflect what you actually see in top, htop, and Linux cgroups.
 
@@ -52,13 +52,13 @@ results.json — structured benchmark data for further analysis
 
 🔬 Intended Audience
 
-Site Reliability Engineers (SREs)
+*Site Reliability Engineers (SREs)
 
-Performance Engineers
+*Performance Engineers
 
-Browser and OS researchers
+*Browser and OS researchers
 
-Anyone interested in real memory behavior, not marketing numbers
+*Anyone interested in real memory behavior, not marketing numbers
 
 ⚠️ Notes
 
