@@ -1,12 +1,8 @@
-// Browser Memory Benchmark Lab - v2.1
-
 /**
- * Browser Memory Benchmark v2.1
- * Ubuntu / Linux
- * - Soma RSS real por process tree
- * - Baseline automático (0 abas)
- * - RAM por aba correta
- * - Exporta JSON + CSV
+ * Browser Memory Benchmark Lab - v2.2 (Hardened)
+ * - Safe cleanup on Ctrl+C
+ * - Timeouts and progress logs
+ * - Prevent orphan browsers
  */
 
 const { chromium, firefox } = require('playwright');
@@ -22,18 +18,32 @@ const URLS = [
 const TABS_SET = [1, 5, 10, 20];
 const RUN_ID = new Date().toISOString().replace(/[:.]/g, '-');
 
+let activeBrowser = null;
+let activeBrowserServer = null;
+
 function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-/**
- * Retorna todos os PIDs da árvore de processos
- */
+/* === Graceful shutdown === */
+async function cleanupAndExit(code = 0) {
+  console.log('\n🧹 Cleaning up browsers...');
+  try {
+    if (activeBrowser) await activeBrowser.close();
+    if (activeBrowserServer) await activeBrowserServer.close();
+  } catch (_) {}
+  process.exit(code);
+}
+
+process.on('SIGINT', () => cleanupAndExit(1));
+process.on('SIGTERM', () => cleanupAndExit(1));
+
+/* === Process tree helpers === */
 function getProcessTree(rootPid) {
   const visited = new Set();
   const stack = [rootPid];
 
-  while (stack.length > 0) {
+  while (stack.length) {
     const pid = stack.pop();
     if (visited.has(pid)) continue;
     visited.add(pid);
@@ -45,7 +55,6 @@ function getProcessTree(rootPid) {
         .split(' ')
         .filter(Boolean)
         .map(Number);
-
       stack.push(...children);
     } catch (_) {}
   }
@@ -53,12 +62,8 @@ function getProcessTree(rootPid) {
   return [...visited];
 }
 
-/**
- * Soma RSS (KB) de uma lista de PIDs
- */
 function sumRssKb(pids) {
   let total = 0;
-
   for (const pid of pids) {
     try {
       const status = fs.readFileSync(`/proc/${pid}/status`, 'utf8');
@@ -66,81 +71,85 @@ function sumRssKb(pids) {
       if (match) total += parseInt(match[1], 10);
     } catch (_) {}
   }
-
   return total;
 }
 
-/**
- * Executa medição real
- */
+/* === Benchmark === */
 async function measure(browserType, browserName, tabs) {
-  // Launch com controle total de processo
-  const browserServer = await browserType.launchServer({
+  console.log(`\n▶ ${browserName} | ${tabs} abas`);
+
+  activeBrowserServer = await browserType.launchServer({
     headless: false
   });
 
-  const rootPid = browserServer.process().pid;
-  const browser = await browserType.connect(browserServer.wsEndpoint());
+  const rootPid = activeBrowserServer.process().pid;
+  activeBrowser = await browserType.connect(activeBrowserServer.wsEndpoint());
 
-  // Baseline (0 abas)
-  await sleep(5000);
-  const baselineRssKb = sumRssKb(getProcessTree(rootPid));
+  try {
+    // Baseline
+    await sleep(5000);
+    const baselineRssKb = sumRssKb(getProcessTree(rootPid));
 
-  const context = await browser.newContext();
-  const pages = [];
+    const context = await activeBrowser.newContext();
+    const pages = [];
 
-  for (let i = 0; i < tabs; i++) {
-    const page = await context.newPage();
-    await page.goto(URLS[i % URLS.length], { waitUntil: 'load' });
-    pages.push(page);
-    await sleep(1000);
+    for (let i = 0; i < tabs; i++) {
+      console.log(`  • Abrindo aba ${i + 1}/${tabs}`);
+      const page = await context.newPage();
+      await page.goto(URLS[i % URLS.length], {
+        waitUntil: 'load',
+        timeout: 30000
+      });
+      pages.push(page);
+      await sleep(1000);
+    }
+
+    console.log('  ⏳ Estabilizando...');
+    await sleep(8000);
+
+    const totalRssKb = sumRssKb(getProcessTree(rootPid));
+
+    return {
+      browser: browserName,
+      tabs,
+      baseline_mb: +(baselineRssKb / 1024).toFixed(1),
+      total_mb: +(totalRssKb / 1024).toFixed(1),
+      per_tab_mb: +((totalRssKb - baselineRssKb) / 1024 / tabs).toFixed(1)
+    };
+  } finally {
+    await activeBrowser.close();
+    await activeBrowserServer.close();
+    activeBrowser = null;
+    activeBrowserServer = null;
   }
-
-  // Aguarda estabilização
-  await sleep(10000);
-
-  const totalRssKb = sumRssKb(getProcessTree(rootPid));
-
-  await browser.close();
-  await browserServer.close();
-
-  return {
-    browser: browserName,
-    tabs,
-    baseline_mb: +(baselineRssKb / 1024).toFixed(1),
-    total_mb: +(totalRssKb / 1024).toFixed(1),
-    per_tab_mb: +((totalRssKb - baselineRssKb) / 1024 / tabs).toFixed(1)
-  };
 }
 
+/* === Main === */
 (async () => {
   const results = [];
 
   for (const tabs of TABS_SET) {
-    console.log(`\n▶ Benchmark: ${tabs} abas`);
     results.push(await measure(chromium, 'chromium', tabs));
     results.push(await measure(firefox, 'firefox', tabs));
   }
 
-  // Export JSON
   const jsonFile = `results-${RUN_ID}.json`;
+  const csvFile = `results-${RUN_ID}.csv`;
+
   fs.writeFileSync(jsonFile, JSON.stringify(results, null, 2));
 
-  // Export CSV
-  const csvFile = `results-${RUN_ID}.csv`;
-  const csv = [
-    'browser,tabs,baseline_mb,total_mb,per_tab_mb',
-    ...results.map(r =>
-      `${r.browser},${r.tabs},${r.baseline_mb},${r.total_mb},${r.per_tab_mb}`
-    )
-  ].join('\n');
-
-  fs.writeFileSync(csvFile, csv);
+  fs.writeFileSync(
+    csvFile,
+    [
+      'browser,tabs,baseline_mb,total_mb,per_tab_mb',
+      ...results.map(r =>
+        `${r.browser},${r.tabs},${r.baseline_mb},${r.total_mb},${r.per_tab_mb}`
+      )
+    ].join('\n')
+  );
 
   console.table(results);
-
   console.log('\n✔ Benchmark finalizado');
-  console.log(`📄 JSON: ${jsonFile}`);
-  console.log(`📄 CSV : ${csvFile}`);
+  await cleanupAndExit(0);
 })();
 
