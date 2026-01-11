@@ -1,3 +1,5 @@
+// Browser Memory Benchmark Lab - v2.1
+
 /**
  * Browser Memory Benchmark v2.1
  * Ubuntu / Linux
