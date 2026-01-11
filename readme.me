@@ -1,46 +1,69 @@
-# Browser Memory Benchmark Lab (Playwright)
+Browser Memory Benchmark Lab
 
-Este laboratório mede **uso real de memória RAM por aba** em navegadores modernos
-utilizando **Playwright**, **Node.js** e leitura direta de **RSS via /proc** no Linux.
+A technical lab that measures real RAM usage per browser tab in modern browsers using
+Playwright, Node.js, and direct RSS inspection via /proc on Linux.
 
-O foco é **benchmark técnico defensável**, no nível de **SRE / Performance Engineering**,
-evitando métricas superficiais de reviews comuns.
+This project focuses on defensible, system-level benchmarking at an
+SRE / Performance Engineering standard — avoiding the shallow metrics often seen in browser reviews.
 
----
+🎯 Goals
 
-## 🎯 Objetivo
+Measure the browser’s true memory baseline
 
-- Medir **baseline real de memória** do navegador
-- Calcular **consumo incremental por aba**
-- Comparar **Chromium vs Firefox**
-- Gerar resultados **reprodutíveis**
-- Exportar dados para **CSV / JSON**
+Calculate incremental memory cost per tab
 
----
+Compare Chromium-based browsers vs Firefox
 
-## 🧠 Metodologia
+Produce reproducible benchmarks
 
-- Navegadores iniciados via **Playwright `launchServer()`**
-- Captura do **PID raiz real**
-- Soma da **árvore completa de processos**
-- Métrica baseada em **RSS do sistema operacional**
-- Baseline (0 abas) descontado automaticamente
+Export results to CSV and JSON
 
-> Isso reflete o que realmente aparece em `top`, `htop` e cgroups.
+🧠 How It Works
 
----
+Browsers are launched using Playwright launchServer()
 
-## 🛠️ Requisitos
+The real root PID is identified
 
-- Ubuntu 20.04+ (ou compatível)
-- Node.js 18+
-- npm
+Memory usage is calculated by summing the entire process tree
 
----
+Metrics are based on OS-level RSS
 
-## 📦 Instalação
+The baseline (0 tabs) is automatically subtracted
 
-```bash
+Results reflect what you actually see in top, htop, and Linux cgroups.
+
+🛠️ Requirements
+
+Linux (Ubuntu 20.04+ or compatible)
+
+Node.js 18+
+
+npm
+
+📦 Installation
 npm install playwright
 npx playwright install --with-deps
 
+📊 Output
+
+results.csv — tab-by-tab memory usage
+
+results.json — structured benchmark data for further analysis
+
+🔬 Intended Audience
+
+Site Reliability Engineers (SREs)
+
+Performance Engineers
+
+Browser and OS researchers
+
+Anyone interested in real memory behavior, not marketing numbers
+
+⚠️ Notes
+
+Measurements are Linux-specific due to /proc usage
+
+Results may vary by kernel, distro, and browser version
+
+Always run benchmarks on an idle system for best accuracy
