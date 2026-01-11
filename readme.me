@@ -1,48 +1,56 @@
-## Browser Memory Benchmark Lab
+# 🧪 Browser Memory Benchmark Lab
 
-A technical lab that measures real RAM usage per browser tab in modern browsers using
-Playwright, Node.js, and direct RSS inspection via /proc on Linux.
+![Linux](https://img.shields.io/badge/Linux-Ubuntu%2020.04%2B-informational)
+![Node.js](https://img.shields.io/badge/Node.js-18%2B-green)
+![Playwright](https://img.shields.io/badge/Playwright-Automation-blue)
+![Benchmark](https://img.shields.io/badge/Benchmark-OS--level%20RSS-critical)
 
-This project focuses on defensible, system-level benchmarking at an
-SRE / Performance Engineering standard — avoiding the shallow metrics often seen in browser reviews.
+A technical research lab that measures **real RAM usage per browser tab**
+in modern browsers using **Playwright**, **Node.js**, and direct **RSS inspection via `/proc`** on Linux.
 
-🎯 Goals
+This project focuses on **defensible, system-level benchmarking**
+aligned with **SRE / Performance Engineering standards** —
+avoiding UI abstractions and shallow review metrics.
 
-*Measure the browser’s true memory baseline
+---
 
-*Calculate incremental memory cost per tab
+# 🎯 Goals
 
-*Compare Chromium-based browsers vs Firefox
+* Measure the browser’s **true memory baseline**
+* Calculate **incremental memory cost per tab**
+* Compare **Chromium-based browsers vs Firefox**
+* Produce **reproducible and auditable benchmarks**
+* Export results to **CSV** and **JSON**
 
-*Produce reproducible benchmarks
+---
 
-*Export results to CSV and JSON
+# 🧠 How It Works
 
-🧠 How It Works
+* Browsers are launched using Playwright `launchServer()`
+* The **real root PID** is identified
+* Memory usage is calculated by summing the **entire process tree**
+* Metrics are based on **OS-level RSS**
+* The **baseline (0 tabs)** is automatically subtracted
 
-*Browsers are launched using Playwright launchServer()
+Results reflect what actually appears in:
+`top`, `htop`, Linux cgroups, and container memory limits.
 
-*The real root PID is identified
+---
 
-*Memory usage is calculated by summing the entire process tree
+# 🛠️ Requirements
 
-*Metrics are based on OS-level RSS
+Linux (Ubuntu 20.04+ or compatible)  
+Node.js 18+  
+npm  
 
-*The baseline (0 tabs) is automatically subtracted
+---
 
-Results reflect what you actually see in top, htop, and Linux cgroups.
+# 📦 Installation
 
-🛠️ Requirements
-
-Linux (Ubuntu 20.04+ or compatible)
-
-Node.js 18+
-
-npm
-
-📦 Installation
+```bash
 npm install playwright
 npx playwright install --with-deps
+
 
 📊 Output
 
